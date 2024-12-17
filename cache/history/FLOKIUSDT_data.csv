@@ -1,0 +1,2 @@
+timestamp,symbol,priceChange,priceChangePercent,weightedAvgPrice,prevClosePrice,lastPrice,lastQty,bidPrice,bidQty,askPrice,askQty,openPrice,highPrice,lowPrice,volume,quoteVolume,openTime,closeTime,firstId,lastId,count
+2024-12-15 16:03:26.848,FLOKIUSDT,-0.00000206,-0.888,0.00023624,0.00023207,0.00023000,913000.00,0.00022999,10474129.00,0.00023000,956197.00,0.00023206,0.00025900,0.00022310,976941201680.00,230791535.09801190,1734192206848,1734278606848,2484680101,2504222737,19542637

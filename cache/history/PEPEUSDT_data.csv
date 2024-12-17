@@ -1,0 +1,2 @@
+timestamp,symbol,priceChange,priceChangePercent,weightedAvgPrice,prevClosePrice,lastPrice,lastQty,bidPrice,bidQty,askPrice,askQty,openPrice,highPrice,lowPrice,volume,quoteVolume,openTime,closeTime,firstId,lastId,count
+2024-12-15 16:03:26.065,PEPEUSDT,0.00000016,0.680,0.00002330,0.00002353,0.00002370,68370104.00,0.00002370,2108534808.00,0.00002371,3537846928.00,0.00002354,0.00002393,0.00002259,10743453605317.00,250360950.84664449,1734192206065,1734278606065,353785596,354744361,958766

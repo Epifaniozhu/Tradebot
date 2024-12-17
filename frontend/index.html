@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加密货币自动交易系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- 账户切换部分 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">账户管理</h2>
+            <div class="flex items-center space-x-4">
+                <select v-model="selectedAccount" class="border rounded px-3 py-2">
+                    <option v-for="account in accounts" :value="account.id">
+                        {{ account.name }}
+                    </option>
+                </select>
+                <button @click="switchAccount" class="bg-blue-500 text-white px-4 py-2 rounded">
+                    切换账户
+                </button>
+                <div class="ml-4 text-gray-700">
+                    <span class="font-semibold">账户余额:</span>
+                    <span class="ml-2">{{ accountBalance.toFixed(2) }} USDT</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 交易控制部分 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">交易控制</h2>
+            <div class="flex items-center space-x-4">
+                <button @click="startTrading" :class="{'bg-red-500': isTrading, 'bg-green-500': !isTrading}" class="text-white px-4 py-2 rounded">
+                    {{ isTrading ? '停止交易' : '开始交易' }}
+                </button>
+                <span class="text-gray-600">状态: {{ tradingStatus }}</span>
+            </div>
+        </div>
+
+        <!-- 市场数据表格 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">市场数据</h2>
+            <div class="text-sm text-gray-500 mb-2">
+                最后更新时间: {{ marketData.lastUpdate || '等待数据...' }}
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">交易对</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">价格</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">涨跌幅</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">成交量</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">成交笔数</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">更新次数</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">最高价</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">最低价</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">成交额</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Tick数</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">趋势强度</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">波动率</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">RSI</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">综合得分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="row in sortedMarketData" 
+                            class="border-t hover:bg-gray-50">
+                            <td class="px-4 py-2">{{ row.symbol }}</td>
+                            <td class="px-4 py-2">{{ formatNumber(row.price) }}</td>
+                            <td class="px-4 py-2" 
+                                :class="{'text-green-600': parseFloat(row.priceChange) > 0, 
+                                        'text-red-600': parseFloat(row.priceChange) < 0}">
+                                {{ row.priceChange }}
+                            </td>
+                            <td class="px-4 py-2">{{ formatNumber(row.volume) }}</td>
+                            <td class="px-4 py-2">{{ row.trades }}</td>
+                            <td class="px-4 py-2">{{ row.updates }}</td>
+                            <td class="px-4 py-2">{{ formatNumber(row.high) }}</td>
+                            <td class="px-4 py-2">{{ formatNumber(row.low) }}</td>
+                            <td class="px-4 py-2">{{ formatNumber(row.quoteVolume) }}</td>
+                            <td class="px-4 py-2">{{ row.tickCount }}</td>
+                            <td class="px-4 py-2" :class="{
+                                'text-green-600': parseFloat(row.trendStrength) > 60,
+                                'text-red-600': parseFloat(row.trendStrength) < 40
+                            }">{{ row.trendStrength }}</td>
+                            <td class="px-4 py-2" :class="{
+                                'text-yellow-600': parseFloat(row.volatility) > 1.0,
+                                'text-gray-600': parseFloat(row.volatility) <= 1.0
+                            }">{{ row.volatility }}</td>
+                            <td class="px-4 py-2" :class="{
+                                'text-green-600': parseFloat(row.rsi) > 70,
+                                'text-red-600': parseFloat(row.rsi) < 30,
+                                'text-gray-600': parseFloat(row.rsi) >= 30 && parseFloat(row.rsi) <= 70
+                            }">{{ row.rsi }}</td>
+                            <td class="px-4 py-2" :class="{
+                                'text-green-600': parseFloat(row.score) >= 70,
+                                'text-yellow-600': parseFloat(row.score) >= 50 && parseFloat(row.score) < 70,
+                                'text-red-600': parseFloat(row.score) < 50
+                            }">{{ row.score }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 实时日志输出 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">操作日志</h2>
+            <div class="h-64 overflow-y-auto bg-gray-100 p-4 rounded">
+                <div v-for="log in logs" :key="log.timestamp" class="mb-2">
+                    <span class="text-gray-500">{{ log.timestamp }}</span>
+                    <span :class="{'text-green-600': log.type === 'success', 'text-red-600': log.type === 'error'}" class="ml-2">
+                        {{ log.message }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录和盈利统计 -->
+        <div class="grid grid-cols-5 gap-6 mb-6">
+            <!-- 历史记录 -->
+            <div class="col-span-4 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">历史操作记录</h2>
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-2">时间</th>
+                            <th class="text-left py-2">操作</th>
+                            <th class="text-left py-2">交易对</th>
+                            <th class="text-right py-2">数量</th>
+                            <th class="text-right py-2">盈亏</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="record in history" :key="record.id" class="border-b">
+                            <td class="py-2">{{ record.timestamp }}</td>
+                            <td class="py-2">{{ record.action }}</td>
+                            <td class="py-2">{{ record.symbol }}</td>
+                            <td class="py-2 text-right">{{ record.size }}</td>
+                            <td class="py-2 text-right" :class="{'text-green-600': record.pnl > 0, 'text-red-600': record.pnl < 0}">
+                                {{ record.pnl }}%
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 盈利统计 -->
+            <div class="col-span-1 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">盈利统计</h2>
+                <div class="text-center space-y-4">
+                    <!-- 百分比收益 -->
+                    <div>
+                        <div class="text-sm text-gray-600 mb-1">收益率</div>
+                        <div class="text-3xl font-bold" :class="{'text-green-600': totalPnl > 0, 'text-red-600': totalPnl < 0}">
+                            {{ totalPnl > 0 ? '+' : '' }}{{ totalPnl }}%
+                        </div>
+                    </div>
+                    <!-- 具体金额 -->
+                    <div>
+                        <div class="text-sm text-gray-600 mb-1">盈亏金额</div>
+                        <div class="text-2xl font-bold" :class="{'text-green-600': pnlAmount > 0, 'text-red-600': pnlAmount < 0}">
+                            {{ pnlAmount > 0 ? '+' : '' }}{{ pnlAmount.toFixed(2) }} USDT
+                        </div>
+                    </div>
+                    <div class="text-gray-600 text-sm mt-2">当次启动累计</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 当前持仓信息 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">当前持仓</h2>
+            <div class="space-y-2">
+                <div v-for="position in positions" :key="position.symbol" class="flex justify-between">
+                    <span>{{ position.symbol }}</span>
+                    <div class="text-right">
+                        <span :class="{'text-green-600': position.pnl > 0, 'text-red-600': position.pnl < 0}">
+                            {{ position.size }} ({{ position.pnl }}%)
+                        </span>
+                        <span class="text-gray-500 text-sm ml-2">
+                            手续费: {{ position.total_fee?.toFixed(4) }} USDT
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html> 

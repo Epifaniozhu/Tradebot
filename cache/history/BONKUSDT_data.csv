@@ -1,0 +1,2 @@
+timestamp,symbol,priceChange,priceChangePercent,weightedAvgPrice,prevClosePrice,lastPrice,lastQty,bidPrice,bidQty,askPrice,askQty,openPrice,highPrice,lowPrice,volume,quoteVolume,openTime,closeTime,firstId,lastId,count
+2024-12-15 16:03:26.828,BONKUSDT,-0.00000007,-0.190,0.00003619,0.00003690,0.00003683,53829532.00,0.00003683,224220998.00,0.00003684,213511461.00,0.00003690,0.00003712,0.00003493,1271861362060.00,46027803.85005385,1734192206828,1734278606828,1175686779,1179942659,4255881
